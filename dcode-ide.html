@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>DCode IDE</title>
+
+<style>
+body{
+    margin:0;
+    background:#1e1e1e;
+    color:#d4d4d4;
+    font-family:Consolas, monospace;
+}
+
+#topbar{
+    background:#2d2d2d;
+    padding:8px;
+    display:flex;
+    gap:8px;
+}
+
+button{
+    background:#3c3c3c;
+    color:white;
+    border:none;
+    padding:6px 12px;
+    cursor:pointer;
+}
+
+#workspace{
+    display:flex;
+    height:calc(100vh - 40px);
+}
+
+#editor{
+    width:60%;
+    background:#1e1e1e;
+    color:#9cdcfe;
+    border:none;
+    padding:10px;
+    font-size:14px;
+    resize:none;
+}
+
+#rightpanel{
+    width:40%;
+    display:flex;
+    flex-direction:column;
+}
+
+#preview{
+    flex:1;
+    background:#0d1117;
+    padding:10px;
+}
+
+#console{
+    height:160px;
+    background:black;
+    padding:10px;
+    overflow:auto;
+}
+</style>
+</head>
+
+<body>
+
+<div id="topbar">
+    <button onclick="runDCode()">Run</button>
+    <button onclick="newFile()">New</button>
+    <button onclick="saveFile()">Export .dc</button>
+    <input type="file" onchange="openFile(event)">
+</div>
+
+<div id="workspace">
+<textarea id="editor">
+<DOCSCRIPT>
+ <DCode>
+
+  <DCODEUI>
+
+window Main:
+    text title "DCode IDE"
+    button helloBtn "Say Hello"
+
+  </DCODEUI>
+
+  <DCODESTYLE>
+
+button:
+    background #238636
+    color white
+
+#title:
+    color #58a6ff
+
+  </DCODESTYLE>
+
+  <SCIPTLOGIC>
+
+on helloBtn.click:
+    print "Hello from DCode!"
+
+  </SCIPTLOGIC>
+
+ </DCode>
+</DOCSCRIPT>
+</textarea>
+
+<div id="rightpanel">
+<div id="preview"></div>
+<div id="console"></div>
+</div>
+</div>
+
+<script>
+
+const preview = document.getElementById("preview")
+const consoleBox = document.getElementById("console")
+
+function print(msg){
+    consoleBox.innerHTML += msg + "<br>"
+}
+
+function clearConsole(){
+    consoleBox.innerHTML = ""
+}
+
+function extract(tag, text){
+    const start = text.indexOf("<"+tag+">")
+    const end = text.indexOf("</"+tag+">")
+    if(start===-1 || end===-1) return ""
+    return text.substring(start+tag.length+2, end).trim()
+}
+
+function runDCode(){
+    clearConsole()
+    preview.innerHTML=""
+
+    const code = document.getElementById("editor").value
+
+    if(!code.includes("<DOCSCRIPT>")){
+        print("Invalid DCode structure")
+        return
+    }
+
+    const ui = extract("DCODEUI", code)
+    const style = extract("DCODESTYLE", code)
+    const logic = extract("SCIPTLOGIC", code)
+
+    const variables = {}
+    const events = {}
+
+    buildUI(ui)
+    applyStyle(style)
+    runLogic(logic)
+
+    function buildUI(text){
+        const lines = text.split("\n")
+        for(let raw of lines){
+            const line = raw.trim()
+
+            if(line.startsWith("text")){
+                const parts = line.split('"')
+                const id = line.split(" ")[1]
+                const value = parts[1]
+                const el = document.createElement("div")
+                el.id=id
+                el.innerText=value
+                preview.appendChild(el)
+            }
+
+            if(line.startsWith("button")){
+                const parts = line.split('"')
+                const id = line.split(" ")[1]
+                const value = parts[1]
+                const el = document.createElement("button")
+                el.id=id
+                el.innerText=value
+                el.onclick=()=>trigger(id,"click")
+                preview.appendChild(el)
+            }
+        }
+    }
+
+    function applyStyle(text){
+        const lines = text.split("\n")
+        let current=null
+
+        for(let raw of lines){
+            const line = raw.trim()
+
+            if(line.endsWith(":")){
+                current=line.replace(":","")
+                continue
+            }
+
+            if(!current) continue
+            const parts=line.split(" ")
+            const prop=parts[0]
+            const value=parts[1]
+
+            let elements=[]
+            if(current.startsWith("#")){
+                const el=document.getElementById(current.replace("#",""))
+                if(el) elements.push(el)
+            }else{
+                elements=document.querySelectorAll(current)
+            }
+
+            elements.forEach(el=>{
+                if(prop==="background") el.style.background=value
+                if(prop==="color") el.style.color=value
+            })
+        }
+    }
+
+    function runLogic(text){
+        const lines=text.split("\n")
+        let currentEvent=null
+
+        for(let raw of lines){
+            const line=raw.trim()
+            if(line==="") continue
+
+            if(line.startsWith("let ")){
+                const parts=line.replace("let ","").split("=")
+                const name=parts[0].trim()
+                let value=parts[1].trim()
+                if(value.startsWith('"')) value=value.replaceAll('"',"")
+                else value=Number(value)
+                variables[name]=value
+                continue
+            }
+
+            if(line.startsWith("print ")){
+                let v=line.replace("print ","")
+                if(variables[v]!==undefined) print(variables[v])
+                else print(v.replaceAll('"',""))
+                continue
+            }
+
+            if(line.startsWith("on ")){
+                const parts=line.match(/on (.*)\.(.*):/)
+                currentEvent=parts[1]+"."+parts[2]
+                events[currentEvent]=[]
+                continue
+            }
+
+            if(currentEvent){
+                events[currentEvent].push(line)
+            }
+        }
+    }
+
+    function trigger(id,type){
+        const key=id+"."+type
+        if(!events[key]) return
+
+        events[key].forEach(cmd=>{
+            if(cmd.startsWith("print")){
+                const v=cmd.replace("print ","")
+                if(variables[v]!==undefined) print(variables[v])
+                else print(v.replaceAll('"',""))
+            }
+        })
+    }
+}
+
+function newFile(){
+document.getElementById("editor").value=`<DOCSCRIPT>
+ <DCode>
+
+  <DCODEUI>
+
+  </DCODEUI>
+
+  <DCODESTYLE>
+
+  </DCODESTYLE>
+
+  <SCIPTLOGIC>
+
+  </SCIPTLOGIC>
+
+ </DCode>
+</DOCSCRIPT>`
+}
+
+function saveFile(){
+const text=document.getElementById("editor").value
+const blob=new Blob([text],{type:"text/plain"})
+const a=document.createElement("a")
+a.href=URL.createObjectURL(blob)
+a.download="program.dc"
+a.click()
+}
+
+function openFile(e){
+const file=e.target.files[0]
+if(!file) return
+const reader=new FileReader()
+reader.onload=ev=>{
+document.getElementById("editor").value=ev.target.result
+}
+reader.readAsText(file)
+}
+
+</script>
+
+</body>
+</html>

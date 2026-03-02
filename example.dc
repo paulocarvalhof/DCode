@@ -1,0 +1,11 @@
+<DOCSCRIPT>
+ <DCode>
+
+  <SCIPTLOGIC>
+
+print "Hello from DCode"
+
+  </SCIPTLOGIC>
+
+ </DCode>
+</DOCSCRIPT>

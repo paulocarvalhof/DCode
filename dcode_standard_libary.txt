@@ -1,0 +1,37 @@
+DCODE STANDARD LIBRARY v1.0
+CORE
+print(value) input(prompt) type(value) convert(value, type) clone(object) length(value) range(start, end) exit() error(message) assert(condition)
+VARIABLES
+let name = value const name = value delete(name) exists(name)
+MATH
+math.add(a,b) math.sub(a,b) math.mul(a,b) math.div(a,b) math.pow(a,b) math.sqrt(x) math.abs(x) math.min(a,b) math.max(a,b) math.round(x) math.floor(x) math.ceil(x) math.random() math.random_range(a,b) math.sin(x) math.cos(x) math.tan(x)
+STRING
+str.upper(text) str.lower(text) str.trim(text) str.split(text, sep) str.join(list, sep) str.contains(text, part) str.replace(text, old, new) str.length(text) str.starts(text, prefix) str.ends(text, suffix) str.substring(text, start, end) str.index(text, part)
+LIST
+list.create() list.add(list, item) list.remove(list, index) list.get(list, index) list.set(list, index, value) list.length(list) list.clear(list) list.contains(list, value) list.reverse(list) list.sort(list)
+OBJECT
+object.create(type) object.set(obj, property, value) object.get(obj, property) object.delete(obj) object.keys(obj) object.values(obj)
+STORAGE
+savestorage(key, value) loadstorage(key) removestorage(key) clearstorage() storagesize()
+FILE
+file.read(path) file.write(path, content) file.append(path, content) file.exists(path) file.delete(path) file.size(path)
+SYSTEM
+system.time() system.date() system.platform() system.version() system.sleep(ms) system.exit()
+NETWORK
+net.request(url) net.get(url) net.post(url, data) net.download(url, path) net.status()
+UI ELEMENTS
+ui.create(type) ui.remove(id) ui.show(id) ui.hide(id) ui.text(id, value) ui.value(id) ui.enable(id) ui.disable(id)
+EVENTS
+on.click(id) on.load() on.keypress(key) on.change(id) on.submit(id)
+SCENE
+scene.create(name) scene.load(name) scene.remove(name) scene.exists(name) scene.list()
+GRAPHICS OBJECTS
+create cube size value create sphere radius value create plane size value delete object id object.move(id, x, y, z) object.rotate(id, x, y, z) object.scale(id, value) object.visible(id, true|false)
+BACKEND / FRONTEND
+frontend.start() backend.start() backend.stop() api.request(route)
+MODULE SYSTEM
+import module export function module.exists(name) module.list()
+DEBUG
+debug.log(value) debug.warn(value) debug.error(value) debug.clear()
+RUNTIME
+runtime.version() runtime.reset() runtime.memory() runtime.stop()
